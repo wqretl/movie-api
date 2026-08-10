@@ -12,7 +12,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 @Getter
 @Setter
-//@Entity
+@Entity
 @Table(name = "roles")
 public class Role {
     @Id

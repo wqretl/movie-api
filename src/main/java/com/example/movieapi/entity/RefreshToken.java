@@ -1,42 +1,57 @@
 package com.example.movieapi.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "refresh_tokens")
 public class RefreshToken {
+
     @Id
-    @NotNull
-    @ColumnDefault("nextval('refresh_tokens_id_seq')")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @NotNull
-    @Column(name = "token", nullable = false, length = Integer.MAX_VALUE)
-    private String token;
+    @Column(name = "jti", nullable = false, unique = true, length = 36)
+    private String jti;  // Уникальный ID токена (из JWT)
 
-    @NotNull
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Column(name = "token_hash", nullable = false, length = 255)
+    private String tokenHash;
 
-    @NotNull
-    @Column(name = "expires_at", nullable = false)
-    private Instant expiresAt;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @NotNull
-    @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Column(name = "expires_at", nullable = false)
+    private Instant expiresAt;
+
+    @Column(name = "revoked")
+    @Builder.Default
+    private Boolean revoked = false;
+
+    @Column(name = "revoked_at")
+    private Instant revokedAt;
+    public boolean isExpired() {
+        return Instant.now().isAfter(expiresAt);
+    }
+
+    public boolean isRevoked() {
+        return revoked != null && revoked;
+    }
+
+    public boolean isValid() {
+        return !isExpired() && !isRevoked();
+    }
 }

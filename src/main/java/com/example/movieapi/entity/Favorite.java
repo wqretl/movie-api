@@ -13,7 +13,7 @@ import java.time.Instant;
 
 @Getter
 @Setter
-//@Entity
+@Entity
 @Table(name = "favorites")
 public class Favorite {
     @Id
