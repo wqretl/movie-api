@@ -26,7 +26,7 @@ public class TestDataFactory {
         User user = new User();
         user.setId(1L);
         user.setUsername("alexsmirnov");
-        user.setFullname("Alex Smirnov");
+        user.setFullName("Alex Smirnov");
         user.setEmail("alexsmirnov@gmail.com");
         user.setPassword("$2a$12$IyZa/gTWHpoEtZmYZQMOVuHY.LkTOEJ7af7j6ZzYLBipc0SHwBcLq");
         user.setEnabled(true);

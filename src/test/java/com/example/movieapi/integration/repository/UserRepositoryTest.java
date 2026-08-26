@@ -26,7 +26,7 @@ class UserRepositoryTest {
         user.setUsername("testuser");
         user.setEmail("test@example.com");
         user.setPassword("encoded");
-        user.setFullname("Test User");
+        user.setFullName("Test User");
         user.setCreatedAt(Instant.now());
         user.setEnabled(true);
         userRepository.save(user);
@@ -46,7 +46,7 @@ class UserRepositoryTest {
         user.setUsername("testuser");
         user.setEmail("test@example.com");
         user.setPassword("encoded");
-        user.setFullname("Test User");
+        user.setFullName("Test User");
         user.setCreatedAt(Instant.now());
         user.setEnabled(true);
         userRepository.save(user);

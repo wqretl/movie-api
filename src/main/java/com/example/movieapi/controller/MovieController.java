@@ -1,10 +1,9 @@
 package com.example.movieapi.controller;
 
 
-import com.example.movieapi.dto.MovieResponse;
-import com.example.movieapi.dto.MovieUpdateRequest;
+import com.example.movieapi.dto.MovieDto.MovieResponse;
+import com.example.movieapi.dto.MovieDto.MovieUpdateRequest;
 import com.example.movieapi.entity.Movie;
-import com.example.movieapi.repository.MovieRepository;
 import com.example.movieapi.service.MovieService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -19,13 +18,13 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/movie")
+@RequestMapping("/api/movies")
 @AllArgsConstructor
 
 public class MovieController {
 
     private final MovieService movieService;
-    private final MovieRepository movieRepository;
+
 
 
 
