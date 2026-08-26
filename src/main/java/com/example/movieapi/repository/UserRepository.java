@@ -6,7 +6,7 @@ import org.springframework.data.repository.Repository;
 import java.util.Optional;
 
 
-public interface UserRepository extends Repository<User, Integer> {
+public interface UserRepository extends Repository<User, Long> {
 
     boolean existsByEmail(String email);
 
@@ -17,4 +17,6 @@ public interface UserRepository extends Repository<User, Integer> {
     Optional<User> findByEmail(String email);
 
     Optional<User> findById(Long id);
+
+    void delete(User user);
 }

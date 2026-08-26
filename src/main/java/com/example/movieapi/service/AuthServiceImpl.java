@@ -1,4 +1,4 @@
-package com.example.movieapi.service.impl;
+package com.example.movieapi.service;
 
 import com.example.movieapi.dto.AuthResponse;
 import com.example.movieapi.dto.LoginRequest;
@@ -14,7 +14,6 @@ import com.example.movieapi.repository.RefreshTokenRepository;
 import com.example.movieapi.repository.RoleRepository;
 import com.example.movieapi.repository.UserRepository;
 import com.example.movieapi.security.jwt.JwtTokenProvider;
-import com.example.movieapi.service.iface.AuthServiceIface;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,7 +24,7 @@ import java.util.Objects;
 
 @AllArgsConstructor
 @Service
-public class AuthServiceImpl implements AuthServiceIface {
+public class AuthServiceImpl {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -34,7 +33,6 @@ public class AuthServiceImpl implements AuthServiceIface {
     private final RefreshTokenRepository refreshTokenRepository;
 
 
-    @Override
     @Transactional
     public AuthResponse userRegister(RegisterRequest request) {
 
@@ -46,7 +44,7 @@ public class AuthServiceImpl implements AuthServiceIface {
         Instant now = Instant.now();
         User user = new User();
         user.setUsername(request.getUsername());
-        user.setFullname(request.getFullName());
+        user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setEnabled(true);
         user.setCreatedAt(now);
@@ -72,7 +70,6 @@ public class AuthServiceImpl implements AuthServiceIface {
                 .build();
     }
 
-    @Override
     @Transactional
     public AuthResponse userLogin(LoginRequest request) {
 
@@ -104,7 +101,6 @@ public class AuthServiceImpl implements AuthServiceIface {
                 .build();
     }
 
-    @Override
     @Transactional
     public String refreshAccessToken(String refreshToken) {
 
@@ -147,7 +143,6 @@ public class AuthServiceImpl implements AuthServiceIface {
         return jwtTokenProvider.generateAccessToken(tokenOwner);
     }
 
-    @Override
     public void logout(String refreshToken) {
 
         // 1. Проверяем валидность токена

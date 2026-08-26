@@ -4,7 +4,7 @@ import com.example.movieapi.dto.AuthResponse;
 import com.example.movieapi.dto.LoginRequest;
 import com.example.movieapi.dto.RegisterRequest;
 import com.example.movieapi.exception.BusinessException;
-import com.example.movieapi.service.iface.AuthServiceIface;
+import com.example.movieapi.service.AuthServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthServiceIface authService;
+    private final AuthServiceImpl authService;
 
     /**
      * Регистрация нового пользователя

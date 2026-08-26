@@ -10,7 +10,7 @@ import com.example.movieapi.repository.RefreshTokenRepository;
 import com.example.movieapi.repository.RoleRepository;
 import com.example.movieapi.repository.UserRepository;
 import com.example.movieapi.security.jwt.JwtTokenProvider;
-import com.example.movieapi.service.impl.AuthServiceImpl;
+import com.example.movieapi.service.AuthServiceImpl;
 import com.example.movieapi.utils.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

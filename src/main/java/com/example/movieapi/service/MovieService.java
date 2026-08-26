@@ -1,16 +1,15 @@
 package com.example.movieapi.service;
 
 
-import com.example.movieapi.dto.MovieResponse;
-import com.example.movieapi.dto.MovieUpdateRequest;
+import com.example.movieapi.dto.MovieDto.MovieResponse;
+import com.example.movieapi.dto.MovieDto.MovieUpdateRequest;
 import com.example.movieapi.entity.Movie;
-import com.example.movieapi.exception.AlreadyExistsException;
+import com.example.movieapi.exception.DuplicateResourceException;
 import com.example.movieapi.exception.NotFoundException;
 import com.example.movieapi.mapper.MovieMapper;
 import com.example.movieapi.repository.MovieRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Service
@@ -34,7 +32,7 @@ public class MovieService {
     public MovieResponse createMovie(Movie movie) {
 
         if (movie.getImdbId() != null && movieRepository.existsByImdbId(movie.getImdbId())) {
-            throw new AlreadyExistsException("Movie", "IMDb ID", movie.getImdbId());
+            throw new DuplicateResourceException("Movie is already exist");
         }
 
         Movie savedMovie = movieRepository.save(movie);
@@ -84,7 +82,7 @@ public class MovieService {
         if (movie.tagline() != null) findMovie.setTagline(movie.tagline());
         if (movie.imdbId() != null) {
             if (movieRepository.existsByImdbIdAndIdNot(movie.imdbId(), movieId)) {
-                throw new AlreadyExistsException("Movie", "IMDb ID", movie.imdbId());
+                throw new DuplicateResourceException("Movie is already exist");
             }
             findMovie.setImdbId(movie.imdbId());
         }

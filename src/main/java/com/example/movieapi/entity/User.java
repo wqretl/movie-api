@@ -37,8 +37,8 @@ public class User {
     @Column(name = "password", nullable = false, length = Integer.MAX_VALUE)
     private String password;
 
-    @Column(name = "enabled")
-    private Boolean enabled;
+    @Column(name = "enabled", nullable = false)
+    private Boolean enabled = true;
 
     @NotNull
     @ColumnDefault("CURRENT_TIMESTAMP")
@@ -48,9 +48,9 @@ public class User {
     @Size(max = 255)
     @NotNull
     @Column(name = "fullname", nullable = false)
-    private String fullname;
+    private String fullName;
 
-    @Column(name = "is_email_verified")
+    @Column(name = "is_email_verified", nullable = false)
     private Boolean isEmailVerified = false;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -72,5 +72,18 @@ public class User {
     public boolean hasRole(String roleName) {
         return this.roles.stream()
                 .anyMatch(role -> role.getName().equalsIgnoreCase(roleName));
+    }
+
+    @PrePersist
+    private void applyDefaults() {
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
+        if (enabled == null) {
+            enabled = true;
+        }
+        if (isEmailVerified == null) {
+            isEmailVerified = false;
+        }
     }
 }

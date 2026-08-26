@@ -4,6 +4,7 @@ import com.example.movieapi.security.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -30,26 +31,50 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
+
                 .authorizeHttpRequests(auth -> auth
+
+                        // Публичные auth endpoints
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
                                 "/api/auth/refresh",
                                 "/api/auth/logout"
                         ).permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/profile/**", "/api/movies/**", "/api/reviews/**")
+
+
+                        // Только ADMIN
+                        .requestMatchers("/api/admin/**")
+                        .hasRole("ADMIN")
+
+                        // USER или ADMIN
+                        .requestMatchers(
+                                "/api/profile/**",
+                                "/api/movies/**",
+                                "/api/reviews/**",
+                                "/api/users/**",
+                                "/api/favorites/**"
+                        )
                         .hasAnyRole("USER", "ADMIN")
-                        .anyRequest().authenticated()
+
+                        // Всё остальное требует авторизации
+                        .anyRequest()
+                        .authenticated()
                 )
+
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                )
+
                 .build();
     }
-
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider =
