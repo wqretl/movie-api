@@ -1,42 +1,54 @@
 package com.example.movieapi.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @Entity
-@Table(name = "ratings")
+@Table(
+        name = "ratings",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_ratings_user_movie",
+                        columnNames = {"user_id", "movie_id"}
+                )
+        }
+)
 public class Rating {
+
     @Id
-    @NotNull
-    @ColumnDefault("nextval('ratings_id_seq')")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @NotNull
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "movie_id", nullable = false)
+    private Movie movie;
 
     @NotNull
-    @Column(name = "movie_id", nullable = false)
-    private Long movieId;
-
-    @NotNull
+    @Min(1)
+    @Max(10)
     @Column(name = "rating", nullable = false)
     private Short rating;
 
-    @NotNull
-    @ColumnDefault("CURRENT_TIMESTAMP")
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = Instant.now();
+    }
 }
