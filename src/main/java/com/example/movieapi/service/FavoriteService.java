@@ -28,7 +28,7 @@ public class FavoriteService {
     private UserService userService;
     private  FavoriteMapper favoriteMapper ;
 
-//todo вынести возврат FavoriteResponse
+
     public FavoriteResponse addFavorite(Long movieId) {
         User user = userService.getCurrentUser();
 
