@@ -36,9 +36,9 @@ public class GlobalExceptionHandler {
 
     // ============ 409 CONFLICT ============
 
-    @ExceptionHandler(DuplicateResourceException.class)
+    @ExceptionHandler( AlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
-            DuplicateResourceException ex, HttpServletRequest request) {
+             AlreadyExistsException ex, HttpServletRequest request) {
 
         log.warn("Duplicate resource: {}", ex.getMessage());
 

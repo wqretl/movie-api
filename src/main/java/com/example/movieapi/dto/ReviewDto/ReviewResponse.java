@@ -1,4 +1,14 @@
 package com.example.movieapi.dto.ReviewDto;
 
-public record ReviewResponse() {
+import java.time.Instant;
+
+public record ReviewResponse(
+        Long id,
+        String username ,
+        Long movieId,
+        String movieTitle,
+        String text,
+        Instant createdAt,
+        Instant updatedAt
+) {
 }
