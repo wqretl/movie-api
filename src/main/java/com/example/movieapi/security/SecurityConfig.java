@@ -14,9 +14,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @EnableMethodSecurity
@@ -29,35 +29,66 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         return http
                 .csrf(AbstractHttpConfigurer::disable)
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Публичные auth endpoints
+                        // Авторизация / регистрация
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
                                 "/api/auth/refresh",
                                 "/api/auth/logout"
-                        ).permitAll()
+                        )
+                        .permitAll()
 
-
-                        // Только ADMIN
+                        // Все admin endpoints
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
 
-                        // USER или ADMIN
+                        // Просмотр фильмов
+                        .requestMatchers(HttpMethod.GET, "/api/movies/**")
+                        .hasAnyRole("USER", "ADMIN")
+
+                        // Изменение каталога фильмов
+                        // Пока CRUD ещё находится в MovieController
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/movies/**"
+                        )
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/movies/**"
+                        )
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/api/movies/**"
+                        )
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/movies/**"
+                        )
+                        .hasRole("ADMIN")
+
+                        // Пользовательские функции
                         .requestMatchers(
                                 "/api/profile/**",
-                                "/api/movies/**",
                                 "/api/reviews/**",
+                                "/api/ratings/**",
                                 "/api/users/**",
                                 "/api/favorites/**"
                         )
                         .hasAnyRole("USER", "ADMIN")
 
-                        // Всё остальное требует авторизации
+                        // Всё неизвестное тоже требует авторизации
                         .anyRequest()
                         .authenticated()
                 )
@@ -75,16 +106,22 @@ public class SecurityConfig {
 
                 .build();
     }
+
     @Bean
     public AuthenticationProvider authenticationProvider() {
+
         DaoAuthenticationProvider authProvider =
                 new DaoAuthenticationProvider(userDetailsService);
+
         authProvider.setPasswordEncoder(passwordEncoder);
+
         return authProvider;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config
+    ) throws Exception {
         return config.getAuthenticationManager();
     }
 }

@@ -19,6 +19,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -47,16 +48,15 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessExpiration);
 
-        String role = user.getRoles().stream()
-                .findFirst()
+        List<String> roles = user.getRoles().stream()
                 .map(Role::getName)
-                .orElse("USER");
+                .toList();
 
         return Jwts.builder()
                 .subject(user.getEmail())
                 .claim("userId", user.getId())
                 .claim("username", user.getUsername())
-                .claim("role", role)
+                .claim("roles", roles)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -112,8 +112,8 @@ public class JwtTokenProvider {
         }
     }
 
-    // GET USERNAME FROM TOKEN
-    public String getUsernameFromToken(String token) {
+    // GET email FROM TOKEN
+    public String getEmailFromToken(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
@@ -145,15 +145,16 @@ public class JwtTokenProvider {
         return claims.getId();
     }
 
-    // GET ROLE FROM TOKEN
-    public String getRoleFromToken(String token) {
+    // GET ROLES FROM TOKEN
+    public List<String> getRolesFromToken(String token) {
+
         Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
 
-        return claims.get("role", String.class);
+        return claims.get("roles", List.class);
     }
 
     // GET EXPIRATION DATE

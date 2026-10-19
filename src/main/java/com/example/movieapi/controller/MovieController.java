@@ -36,26 +36,7 @@ public class MovieController {
     }
 
 
-    @DeleteMapping("/{id}")
-    public void deleteById(@PathVariable Long id){
-        movieService.deleteMovieById(id);
-    }
 
-    @PostMapping
-    public ResponseEntity<MovieResponse> createMovie( @Valid @RequestBody Movie movie){
-
-        MovieResponse movieResponse = movieService.createMovie(movie);
-
-        return ResponseEntity.created(URI.create("/api/movie/"+ movieResponse.id())).body(movieResponse);
-
-
-    }
-
-    @PatchMapping("/{id}")
-    public ResponseEntity<MovieResponse> updateMovie(@PathVariable Long id, @RequestBody MovieUpdateRequest movie){
-        MovieResponse movieResponse = movieService.updateMovie(id, movie);
-        return ResponseEntity.status(HttpStatus.OK).body(movieResponse);
-    }
 
     @GetMapping ("/search")
     public ResponseEntity<List<MovieResponse>> searchByTitle(@RequestParam String title){
