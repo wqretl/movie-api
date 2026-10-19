@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 @Component
 @Slf4j
@@ -48,25 +48,47 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         final String jwt = authHeader.substring(7);
-        final String userEmail = jwtTokenProvider.getUsernameFromToken(jwt);
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if (jwtTokenProvider.validateToken(jwt)) {
-                String role = jwtTokenProvider.getRoleFromToken(jwt);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+        if (!jwtTokenProvider.validateToken(jwt)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
-                        );
+        final String userEmail = jwtTokenProvider.getEmailFromToken(jwt);
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+        if (userEmail != null
+                && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                log.info("User '{}' authenticated with role: {}", userEmail, role);
-            }
+            UserDetails userDetails =
+                    userDetailsService.loadUserByUsername(userEmail);
+
+            List<String> roles =
+                    jwtTokenProvider.getRolesFromToken(jwt);
+
+            List<SimpleGrantedAuthority> authorities = roles.stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .toList();
+
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            authorities
+                    );
+
+            authToken.setDetails(
+                    new WebAuthenticationDetailsSource()
+                            .buildDetails(request)
+            );
+
+            SecurityContextHolder.getContext()
+                    .setAuthentication(authToken);
+
+            log.info(
+                    "User '{}' authenticated with roles: {}",
+                    userEmail,
+                    roles
+            );
         }
 
         filterChain.doFilter(request, response);

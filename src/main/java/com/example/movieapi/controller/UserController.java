@@ -1,17 +1,16 @@
 package com.example.movieapi.controller;
 
 
-import com.example.movieapi.dto.UserDto.UserCreatedRequest;
 import com.example.movieapi.dto.UserDto.UserProfileResponse;
 import com.example.movieapi.dto.UserDto.UserUpdateRequest;
 import com.example.movieapi.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 
 @RestController
 @RequestMapping("/api/users")
@@ -23,33 +22,30 @@ public class UserController {
 
 
 
-    @GetMapping("/{id}")
-    public ResponseEntity <UserProfileResponse> getUserById( @PathVariable Long id){
 
-       return ResponseEntity.ok(userService.getUserById(id));
+    @GetMapping("/me")
+    public ResponseEntity <UserProfileResponse> getCurrentUserProfile(){
+       return ResponseEntity.status(HttpStatus.OK).body(userService.getCurrentUserProfile());
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable Long id){
-        userService.deleteUserById(id);
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteCurrentUserProfile(){
+        userService.deleteCurrentUserProfile();
         return ResponseEntity.noContent().build();
 
     }
 
-    @PatchMapping ("/{id}")
-    public ResponseEntity<UserProfileResponse> updateUser (@PathVariable Long id , @Valid @RequestBody UserUpdateRequest userUpdateRequest){
+    @PatchMapping ("/me")
+    public ResponseEntity<UserProfileResponse> updateCurrentUserProfile ( @Valid @RequestBody UserUpdateRequest userUpdateRequest){
 
-        UserProfileResponse userProfileResponse = userService.updateUser(id, userUpdateRequest);
+        UserProfileResponse userProfileResponse = userService
+                .updateCurrentUserProfile( userUpdateRequest);
 
         return ResponseEntity.ok(userProfileResponse);
 
     }
 
-    @GetMapping ("/me-test")
-    public String testCurrentUser( Authentication authentication){
 
-        return authentication.getName();
-    }
 
 
 }

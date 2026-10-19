@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 @AllArgsConstructor
@@ -39,146 +40,183 @@ public class AuthServiceImpl {
         validateRegistration(request);
 
         Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new ResourceNotFoundException("The role USER was not found in the system"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "The role USER was not found in the system"
+                        )
+                );
 
-        Instant now = Instant.now();
         User user = new User();
+
         user.setUsername(request.getUsername());
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setEnabled(true);
-        user.setCreatedAt(now);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+
         user.addRole(userRole);
 
         User savedUser = userRepository.save(user);
 
-        TokenPair tokenPair = jwtTokenProvider.generateAndSaveTokens(savedUser);
+        TokenPair tokenPair =
+                jwtTokenProvider.generateAndSaveTokens(savedUser);
 
-        String role = savedUser.getRoles().stream()
-                .findFirst()
+        List<String> roles = savedUser.getRoles().stream()
                 .map(Role::getName)
-                .orElse("USER");
+                .toList();
 
         return AuthResponse.builder()
                 .accessToken(tokenPair.accessToken())
                 .refreshToken(tokenPair.refreshToken())
                 .tokenType("Bearer")
                 .expiresIn(15 * 60L)
-                .role(role)  // ← Добавили
+                .roles(roles)
                 .username(savedUser.getUsername())
                 .build();
     }
+
 
     @Transactional
     public AuthResponse userLogin(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found")
+                );
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword()))
+        if (!passwordEncoder.matches(
+                request.getPassword(),
+                user.getPassword()
+        )) {
             throw new BusinessException("Invalid password");
+        }
 
-
-        if (!user.getEnabled())
+        if (!user.getEnabled()) {
             throw new BusinessException("Account is disabled");
+        }
 
+        TokenPair tokenPair =
+                jwtTokenProvider.generateAndSaveTokens(user);
 
-        TokenPair tokenPair = jwtTokenProvider.generateAndSaveTokens(user);
-
-        String role = user.getRoles().stream()
-                .findFirst()
+        List<String> roles = user.getRoles().stream()
                 .map(Role::getName)
-                .orElse("USER");
+                .toList();
 
         return AuthResponse.builder()
                 .accessToken(tokenPair.accessToken())
                 .refreshToken(tokenPair.refreshToken())
                 .tokenType("Bearer")
                 .expiresIn(15 * 60L)
-                .role(role)  // ← Добавили
+                .roles(roles)
                 .username(user.getUsername())
                 .build();
     }
 
+
     @Transactional
     public String refreshAccessToken(String refreshToken) {
 
-        // 1. Проверяем JWT
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new BusinessException("Invalid refresh token");
         }
 
-        // 2. Извлекаем данные
         String jti = jwtTokenProvider.getJwtId(refreshToken);
         Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
 
-        // 3. Ищем по jti
         RefreshToken token = refreshTokenRepository.findByJti(jti)
-                .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Refresh token not found"
+                        )
+                );
 
-        // 4. Проверяем принадлежность
         if (!token.getUser().getId().equals(userId)) {
-            throw new BusinessException("Token does not belong to this user");
+            throw new BusinessException(
+                    "Token does not belong to this user"
+            );
         }
 
-        // 5. Проверяем хеш JTI (НЕ ВЕСЬ ТОКЕН!)
-        if (!passwordEncoder.matches(jti, token.getTokenHash())) {
+        if (!passwordEncoder.matches(
+                jti,
+                token.getTokenHash()
+        )) {
             throw new BusinessException("Token hash mismatch");
         }
 
-        // 6. Проверяем статус
         if (!token.isValid()) {
-            throw new BusinessException("Token has been revoked or expired");
+            throw new BusinessException(
+                    "Token has been revoked or expired"
+            );
         }
 
-        // 7. Получаем пользователя
         User tokenOwner = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "User not found"
+                        )
+                );
 
         if (!tokenOwner.getEnabled()) {
-            throw new BusinessException("User account is disabled");
+            throw new BusinessException(
+                    "User account is disabled"
+            );
         }
 
         return jwtTokenProvider.generateAccessToken(tokenOwner);
     }
 
+
     public void logout(String refreshToken) {
 
-        // 1. Проверяем валидность токена
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new BusinessException("Invalid refresh token");
         }
 
-        // 2. Извлекаем JTI из токена
         String jti = jwtTokenProvider.getJwtId(refreshToken);
 
-        // 3. Ищем токен в БД
         RefreshToken token = refreshTokenRepository.findByJti(jti)
-                .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Refresh token not found"
+                        )
+                );
 
-        // 4. Отзываем токен
         token.setRevoked(true);
         token.setRevokedAt(Instant.now());
+
         refreshTokenRepository.save(token);
     }
 
+
     private void validateRegistration(RegisterRequest request) {
 
-        if (!Objects.equals(request.getPassword(), request.getConfirmPassword()))
-            throw new BusinessException("Password do not match");
+        if (!Objects.equals(
+                request.getPassword(),
+                request.getConfirmPassword()
+        )) {
+            throw new BusinessException(
+                    "Passwords do not match"
+            );
+        }
 
+        if (request.getPassword().length() < 8) {
+            throw new BusinessException(
+                    "The password must contain at least 8 characters."
+            );
+        }
 
-        if (request.getPassword().length() < 8)
-            throw new BusinessException("The password must contain at least 8 characters.");
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException(
+                    "User with this email already exists"
+            );
+        }
 
-
-        if (userRepository.existsByEmail(request.getEmail()))
-            throw new DuplicateResourceException("User with this email already exists");
-
-
-        if (userRepository.existsByUsername(request.getUsername()))
-            throw new DuplicateResourceException("A user with the same name " + request.getUsername() + " already exists.");
-
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new DuplicateResourceException(
+                    "A user with the same name "
+                            + request.getUsername()
+                            + " already exists."
+            );
+        }
     }
 }
