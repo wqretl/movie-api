@@ -3,10 +3,15 @@ package com.example.movieapi.service;
 
 
 import com.example.movieapi.dto.UserDto.UserProfileResponse;
+import com.example.movieapi.dto.UserDto.UserRoleRequest;
+import com.example.movieapi.dto.UserDto.UserStatusRequest;
 import com.example.movieapi.dto.UserDto.UserUpdateRequest;
+import com.example.movieapi.entity.Role;
 import com.example.movieapi.entity.User;
+import com.example.movieapi.exception.BusinessException;
 import com.example.movieapi.exception.NotFoundException;
 import com.example.movieapi.mapper.UserMapper;
+import com.example.movieapi.repository.RoleRepository;
 import com.example.movieapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -15,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
+import java.util.Set;
 
 
 @Service
@@ -23,6 +29,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final RoleRepository roleRepository;
 
     public UserProfileResponse getCurrentUserProfile(){
         User user= getCurrentUser() ;
@@ -88,6 +95,41 @@ public class UserService {
         List <User> users = userRepository.findAll();
 
         return userMapper.toUserProfileResponseList(users);
+    }
+
+    public UserProfileResponse updateUserStatus(Long id,
+            UserStatusRequest request
+    ) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User", id));
+
+        user.setEnabled(request.enabled());
+
+        User savedUser = userRepository.save(user);
+
+        return userMapper.toUserProfileResponse(savedUser);
+    }
+
+    public UserProfileResponse addRoleToUser(Long id, UserRoleRequest request){
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User", id));
+        Role role = roleRepository.findByName(request.role()).orElseThrow(()->new NotFoundException("Role","name",request.role()));
+
+        user.addRole(role);
+        User savedUser = userRepository.save(user);
+        return userMapper.toUserProfileResponse(savedUser);
+    }
+
+    public UserProfileResponse removeRoleFromUser(Long id, UserRoleRequest request){
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User", id));
+        Role role = roleRepository.findByName(request.role()).orElseThrow(()->new NotFoundException("Role","name",request.role()));
+        if (role.getName().equals("USER")) {
+            throw new BusinessException("USER role cannot be removed");
+        }
+        user.removeRole(role);
+        User savedUser = userRepository.save(user);
+        return userMapper.toUserProfileResponse(savedUser);
     }
 
 }
