@@ -2,6 +2,8 @@ package com.example.movieapi.controller.admin;
 
 
 import com.example.movieapi.dto.UserDto.UserProfileResponse;
+import com.example.movieapi.dto.UserDto.UserRoleRequest;
+import com.example.movieapi.dto.UserDto.UserStatusRequest;
 import com.example.movieapi.dto.UserDto.UserUpdateRequest;
 import com.example.movieapi.service.UserService;
 import jakarta.validation.Valid;
@@ -51,6 +53,29 @@ public class AdminUserController {
         @GetMapping
         public ResponseEntity<List<UserProfileResponse>> getAllUsers(){
             return ResponseEntity.status(HttpStatus.OK).body(userService.getAllUsers());
+        }
+
+        @PatchMapping ("/{id}/status")
+        public ResponseEntity<UserProfileResponse> updateUserStatus(@PathVariable Long id,@Valid @RequestBody UserStatusRequest userStatusRequest){
+             UserProfileResponse userProfileResponse = userService.updateUserStatus(id, userStatusRequest);
+             return ResponseEntity.ok(userProfileResponse);
+        }
+
+        @PostMapping("/{id}/roles")
+        public ResponseEntity<UserProfileResponse> addRoleToUser(@PathVariable Long id,
+                                                                 @Valid @RequestBody UserRoleRequest userRoleRequest){
+            return ResponseEntity.status(HttpStatus.OK).body(userService.addRoleToUser(id, userRoleRequest));
+
+        }
+
+        @DeleteMapping ("/{id}/roles")
+        public ResponseEntity<UserProfileResponse> removeRoleFromUser(
+                @PathVariable Long id,
+                @Valid @RequestBody UserRoleRequest userRoleRequest
+
+        )
+        {
+            return ResponseEntity.ok().body(userService.removeRoleFromUser(id,userRoleRequest ));
         }
 
 
